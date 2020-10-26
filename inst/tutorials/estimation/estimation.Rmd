@@ -1,0 +1,444 @@
+---
+title: "Introduction to Estimation and Intervals"
+output: learnr::tutorial
+runtime: shiny_prerendered
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+library(data.table)
+library(ggplot2)
+library(magrittr)
+library(plotly)
+learnr::initialize_tutorial()
+```
+
+## Sampling recap
+
+### Abraham Wald
+
+![](http://www.mrmeyer.com/blog/wp-content/uploads/071126_1.jpg)
+
+[https://pollev.com/farewell](https://pollev.com/farewell)
+
+### Central Limit Theorem
+
+What did you discover about the sampling distribution of the SD?
+
+## Maximum likelihood estimation
+
+Remember our friends `P1`, `P2`, and `P3`? They were three competing models that may or may not have generated the data 'tails, heads, tails' (equivalently: '1, 0, 1').
+
+```{r binomial}
+P1 <- function() {
+  rbinom(3, size = 1, prob = 1/3) %>% paste(collapse = "") # three tosses of a single coin
+}
+
+P2 <- function() {
+  rbinom(3, size = 1, prob = 2/3) %>% paste(collapse = "")
+}
+
+P3 <- function() {
+  rbinom(3, size = 1, prob = 3/3) %>% paste(collapse = "")
+}
+```
+
+*Maximum likelihood estimation* involves identifying the model that makes the data we observed most likely to have occurred. We saw last week that `P2` was twice as likely to produce this data as `P1`, and that `P3` could never produce this data. In this case, `P2` is our maximum likelihood estimate, or MLE.
+
+> A *point estimate* is just a single model ("point") --- or a single instance of model parameter(s) --- that we have identified as somehow relevant to a scientific question of interest ("estimate").
+
+What would be the MLE for the other possible datasets we could have had?
+
+```{r mles, exercise = TRUE, exercise.setup = "binomial"}
+nSims <- 1e3
+data.table(model = "P1", result = replicate(nSims, P1())) %>%
+  rbind(data.table(model = "P2", result = replicate(nSims, P2()))) %>%
+  rbind(data.table(model = "P3", result = replicate(nSims, P3()))) -> fr
+
+ggplot(fr, aes(x = result, fill = model)) + geom_bar()
+```
+
+What do the models where `P1` wins have in common? How about `P2`? And `P3`?
+
+So we can easily work out the MLE when there are only three models to choose from. But what happens when our set of candidate models is bigger? Infinite? Uncountably infinite, even?
+
+For example: we could have a set $\{P_{\theta}: \theta \in [0, 1]\}$ of candidate models, where $P_{\theta}$ corresponds to three independent tosses of a coin that has probability $\theta$ of landing 'tails'. 
+
+We can't try them all, so we need another way to tackle this. We know that the total number of 'tails' $X$ satisfies
+
+$$P_{\theta}(X = x) \propto \theta^{x}(1 - \theta)^{3 - x}$$
+which looks something like the following graph:
+
+```{r bin-like, exercise = TRUE}
+expand.grid(x = 0:3, theta = seq(0, 1, by = 0.01)) %>% data.table() %>%
+  extract(, prop := theta^x * (1 - theta)^(3 - x)) %>%
+  ggplot(aes(x = theta, y = prop)) + geom_line() + facet_grid(x ~ ., scales = "free_y")
+```
+
+Can you work out numerically what these MLEs should be, for each of $X = 0, 1, 2, 3$?
+
+```{r mle-optim, exercise = TRUE}
+likelihood <- function(theta, x) theta^x * (1 - theta)^(3 - x)
+
+optimize(likelihood, interval = 0:1, x = 0, maximum = TRUE)
+# repeat for x = 1, 2, 3
+```
+
+```{r mle-optim-solution}
+optimize(likelihood, interval = 0:1, x = 0, maximum = TRUE)
+optimize(likelihood, interval = 0:1, x = 1, maximum = TRUE)
+optimize(likelihood, interval = 0:1, x = 2, maximum = TRUE)
+optimize(likelihood, interval = 0:1, x = 3, maximum = TRUE)
+```
+
+In fact, it is not too difficult to show that this likelihood is maximized at exactly $\theta = \frac{x}{3}$ in our case, and $\theta = \frac{x}{n}$ in general.
+
+In principle, it doesn't matter how many models we're choosing among, or how many parameters are needed to specify these models:
+
+> Maximum likelihood estimation chooses the model that makes the data most likely.
+
+Here's an example of a two-parameter model (mean and standard deviation), where we find out which Normal distribution makes our data most likely to have occurred. Run it a few times to see how the MLEs move around with the data.
+
+```{r mean-var-optim, exercise = TRUE}
+x <- rnorm(30, mean = 19, sd = 7)
+hist(x)
+
+loglik <- function(pars, x) dnorm(x, mean = pars[1], sd = pars[2], log = TRUE) %>% sum()
+
+optim(0:1, loglik, x = x, control = list(fnscale = -1))
+```
+
+If there's a tie for 1st place, then the MLE is not unique.
+
+It's really pretty important that we're choosing among a restricted class of models. Ask yourself what an MLE would be if our class of models to choose from included all possible data-generating mechanisms? If it helps to think of an example, ask yourself what the MLE(s) might be to explain why your tutor failed to turn up to teach today?
+
+[https://pollev.com/farewell](https://pollev.com/farewell)
+
+## Likelihood intervals
+
+Point estimation  picks out a single model from a set of candidate models, for instance  --- in the case of maximum likelihood estimation --- the model that makes the data most likely.
+
+To supplement point estimation, we may wish to also identify a subset of models (data generating mechanisms / theories / parameters) that are broadly consistent with the data.
+
+One of the simplest ways to do this is using the likelihood again: pick a cutoff relative to the maximum likelihood estimate, and exclude any model whose probability of giving rise to the observed data is smaller than this cutoff.
+
+[https://pollev.com/farewell](https://pollev.com/farewell)
+
+### One parameter
+
+For our `P1`, `P2`, `P3` example, which models would be in a 1/8 likelihood interval (likelihood set, really) for each possible value of the data? Replace the `...` to find out. Who's in? Who's out?
+
+```{r like-interval, exercise = TRUE}
+data.table(n_tails = 0:3) %>%
+  extract(, P1 := choose(3, n_tails) * (1/3)^n_tails * (2/3)^(3 - n_tails)) %>%
+  extract(, P2 := choose(3, n_tails) * (2/3)^n_tails * (1/3)^(3 - n_tails)) %>%
+  extract(, P3 := choose(3, n_tails) * (3/3)^n_tails * (0/3)^(3 - n_tails)) -> likelihoods
+
+likelihoods[, MLE_prob := pmax(P1, P2, P3)]
+likelihoods[, P1_in := ... >= 1/8] # is P1 in?
+likelihoods[, P2_in := ... >= 1/8] # is P2 in?
+likelihoods[, P3_in := ... >= 1/8] # is P3 in?
+
+likelihoods
+```
+
+```{r like-interval-solution}
+likelihoods[, P1_in := P1 / MLE_prob >= 1/8] # is P1 in?
+likelihoods[, P2_in := P2 / MLE_prob >= 1/8] # is P2 in?
+likelihoods[, P3_in := P3 / MLE_prob >= 1/8] # is P3 in?
+```
+
+Now let's use that larger (okay, *much* larger) set of candidate models, $\{P_{\theta}: \theta \in [0, 1]\}$. If the data are 'tails, heads, tails' as before, we know the MLE is for $\theta$ is 2/3, but what other models would make it into a 1/8 likelihood interval?
+
+Add a dashed vertical reference line (`geom_vline()`) to the following plot at $\theta = 2/3$, and a horizontal reference line (`geom_hline()`) where the relative likelihood is 1/8. 
+
+```{r continuous-interval, exercise = TRUE}
+data.table(theta = seq(0, 1, by = 0.01)) %>%
+  extract(, likelihood := choose(3, 2) * theta^2 * (1 - theta)^1) %>%
+  extract(, relative_likelihood := likelihood / max(likelihood)) %>%
+  ggplot(aes(x = theta, y = relative_likelihood)) + geom_line() +
+  ... # add reference lines here
+```
+
+```{r continuous-interval-solution}
+  geom_vline(xintercept = 2/3, linetype = "dashed") +
+  geom_hline(yintercept = 1/8, linetype = "dashed")
+```
+
+We can repeat this exercise for every possible value of the number of tails (0, 1, 2, 3):
+
+```{r all-likelihoods, exercise = TRUE}
+expand.grid(theta = seq(0, 1, by = 0.01), n_tails = 0:3) %>% data.table() %>%
+  extract(, likelihood := choose(3, n_tails) * theta^n_tails * (1 - theta)^(3 - n_tails)) %>%
+  extract(, relative_likelihood := likelihood / max(likelihood), by = n_tails) %>%
+  ggplot(aes(x = theta, y = relative_likelihood)) + geom_line() + facet_grid(n_tails ~ .) +
+  geom_hline(yintercept = 1/8, linetype = "dashed")
+```
+
+The arbitrariness of where to end the set or interval will be a recurring theme today! But notice
+
+- there is no further ambiguity once the cutoff is set
+- it doesn't matter how we parametrize the distribution (e.g. in terms of odds)
+- the (extreme) asymmetry of some of the intervals
+- this example provides a point of reference: 1/8 is the chance of three tails in a row on a fair coin
+- the interval only contains data-generating mechanisms that
+  * (a) actually exist
+  * (b) can actually give rise to the data
+
+### More parameters
+
+This is now harder, because often we are only really interested in one aspect of the model --- the mean, say --- the rest being basically a *nuisance*.
+
+> We often call parameters we aren't interested in *nuisance parameters*.
+
+Run the following code to explore the shape of the (log-)likelihood function as a function of both the mean ($\mu$) and the standard deviation ($\sigma$) of the hypothesised normal distribution.
+
+```{r mean-var-surface-setup}
+set.seed(0)
+```
+
+```{r mean-var-surface, exercise = TRUE}
+x <- rnorm(30, mean = 19, sd = 7)
+
+expand.grid(mu = seq(10, 30, by = 1), sigma = seq(5, 10, by = 1)) %>% data.table() %>%
+  extract(, loglik := dnorm(x, mean = mu, sd = sigma, log = TRUE) %>% sum(),
+          by = list(mu, sigma)) -> likelihoods
+
+likelihoods %>%
+  plot_ly(x = ~mu, y = ~sigma, z = ~loglik, color = ~loglik,
+          type = "scatter3d", mode = "markers")
+```
+
+Now modify the code so that it explores a denser grid of points (`seq(..., by = 0.1)`, for example) but only plots the points within (say) 4 log-likelihood units of the maximum. Can you colour the points according to whether they are within (say) 2 log-likelihood units? Roughly, this consitutes a 1/8 likelihood region.
+
+```{r mean-var-surface-solution}
+expand.grid(mu = seq(10, 30, by = 0.1), sigma = seq(5, 10, by = 0.1)) %>%
+  data.table() %>%
+  extract(, loglik := dnorm(x, mean = mu, sd = sigma, log = TRUE) %>% sum(),
+          by = list(mu, sigma)) -> likelihoods
+
+likelihoods[, within4 := max(loglik) - loglik < 4]
+likelihoods[, within2 := max(loglik) - loglik < 2]
+
+likelihoods[within4 == TRUE] %>%
+  plot_ly(x = ~mu, y = ~sigma, z = ~loglik, color = ~within2,
+          type = "scatter3d", mode = "markers")
+```
+
+Rotate the graph to view it from 'above'. What are the lowest and highest values of $\mu$ appearing in this 1/8 likelihood region? How about for $\sigma$?
+
+An alternative to this three-dimensional viewpoint is to try to concentrate the likelihood on the parameter of interest --- $\mu$, say. This can be done in a few different ways.
+
+- The most general purpose way is called profile likelihood. This involves looking at the likelihood surface from the 'side' (profile), so that all we see is the biggest possible value of the likelihood achievable with that value $\mu$. (But does it compare apples to oranges?)
+
+- Sometimes, we can condition on a function of the data that removes dependence on the nuisance parameters ($\sigma$, in this case). This is called *conditional likelihood*.
+
+- Alternatively, we can find some function of the data that does not directly depend on the nuisance parameters. This is called a *marginal likelihood*.
+
+In this case, we can directly examine the marginal distribution of $$T = \frac{\bar{X}}{S / \sqrt{n}}$$ and uncover a $t$-distribution that depends only on $\mu$ (and the sample size).
+
+## The $t$-distribution
+
+![](https://foxfiregeneva.com/file/guinness-beer-will-soon-be-vegan.jpeg){width="50%"}
+
+> "The usual method of determining the probability that the mean of the population lies within a given distance of the mean of the sample, is to assume a normal distribution about the mean of the sample with a standard deviation equal to $s/\sqrt{n}$, where $s$ is the standard devaition of the sample, and to use the tables of the probability integral.
+>
+> But, as we decrease the number of experiments, the value of the standard deviation found from the sample of experiments becomes itself subject to an increasing error, until judgements reached in this way may become altogether misleading." --- Student, *Biometrika*, 1908
+
+We can see the problem "Student" was describing in the following exercise. What happens when we try larger sample sizes than 5? Smaller? How low can you go?
+
+```{r small-sample, exercise = TRUE}
+z <- replicate(1e3, rnorm(5, mean = 0, sd = 1)) %>%
+            apply(2, function(x) sqrt(5) * mean(x) / sd(x))
+
+qqnorm(z)
+qqline(z)
+```
+
+![](https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/William_Gosset_plaque_in_Guinness_storehouse_tour%2C_Ireland.jpg/440px-William_Gosset_plaque_in_Guinness_storehouse_tour%2C_Ireland.jpg){width="50%"}
+
+Gosset showed that $$T = \frac{\bar{X}}{S / \sqrt{n}}$$ has a particular (non-Normal) distribution that does not depend on $\sigma$. We can use this to form a marginal likelihood interval for $\mu$:
+
+```{r marginal-likelihood-setup}
+set.seed(0)
+```
+
+```{r marginal-likelihood, exercise = TRUE}
+x <- rnorm(30, mean = 19, sd = 7)
+
+data.table(mu = seq(15, 25, by = 0.1)) %>%
+  extract(, loglik := dt(sqrt(30) * (mean(x) - mu) / sd(x), df = 29, log = TRUE)) %>%
+  ggplot(aes(x = mu, y = loglik)) + geom_line() +
+  geom_hline(yintercept = log(1/8), linetype = "dashed")
+```
+
+How does this compare with the profile likelihood interval?
+
+The $t$-distribution crops up *a lot* (as we shall see).
+
+## Bayesian credible intervals
+
+### Bayesian estimation
+
+Bayesian statisticians use data to update their *prior* beliefs about the relative likelihood of the set of candidate models (say `P1`, `P2`, and `P3` again).
+
+Bayes' theorem allows us to assess
+
+$$P(\mathrm{model} \mid \mathrm{data}) \propto P(\mathrm{data} \mid \mathrm{model}) \times P(\mathrm{model})$$
+
+The left-hand side of this expression is called a *posterior* probability.
+
+We can now ask which model has the biggest posterior! This is again *point estimation*.
+
+Assign a prior to each of `P1`, `P2`, and `P3`, and work out their posterior probabilities given the data 'tails, heads, tails'.
+
+```{r bayes, exercise = TRUE}
+```
+
+This procedure coincides with maximizing the liklihood if $P(\mathrm{model}) \propto 1$: a *uniform prior*. But this isn't always possible, or advisable.
+
+It is impossible to specify ignorance! Uniform distribution is not such a statement -- rather, it is the strong statement that all models are equally likely.
+
+### One parameter
+
+Choice of model now has a posterior distribution. We can form a credible interval by grabbing whatever percentage of this we want.
+
+### More parameters
+
+Bayesians can marginalise over other parameters to focus on aspects of inference most relevant. Note that
+
+- t distributions arise again, as marginal posterior distribution
+- there is some ambiguity here: we can choose more than one (say 95%) credible interval
+- Bayesians often choose the interval of highest posterior density (roughly, the shortest interval)
+
+Despite the apparent attraction of Bayesian inference, this is still not universally accepted, basically because of the important and not-always-obvious role of the prior.
+
+## Confidence intervals
+
+We can also use the (estimated) sampling distribution of our estimators to select a subset of models broadly consistent with the observed data.
+
+> Although this is easily the most problematic of the three to interpret, it is also what is most usually done.
+
+Let's suppose that, in fact, the true probability of tails is 0.5. (This isn't one of our three candidate models `P1`, `P2`, and `P3` --- but this doesn't matter for these purposes.)
+
+Run the following code. We see that `P1` is the MLE about 50% of the time, `P2` about 40% of the time, and `P3` about 10% of the time.
+
+```{r p1p2p3-ci, exercise = TRUE}
+data.table(n_tails = 0:3, mle = c("P1", "P1", "P2", "P3"), key = "n_tails") %>%
+  extract(data.table(n_tails = rbinom(1e5, size = 3, prob = 0.5))) %>%
+  extract(, table(mle) %>% prop.table())
+```
+
+A confidence set (usually, an interval) is just a collection of these models together with the associated total percentage. So `P1` and `P2` would together make up a 90% confidence interval, `P2` and `P3` make up a 50% confidence interval, and --- although unusual --- `P1` and `P3` make up a 60% confidence set.
+
+Obviously, all three models together form a 100% confidence set. This illustrates one of the drawbacks of this terminology: we might be seen to be claiming to be "100% confident" the true model is one of these three, when it fact it isn't.
+
+In real life, we don't have access to the true data generating mechanism, so instead we can make do with (for example) the bootstrap version. Modify the code below to find out the bootstrap distribution of the MLE if the observed data were 'tails, heads, tails'.
+
+```{r p1p2p3-bootci, exercise = TRUE}
+data.table(n_tails = 0:3, mle = c("P1", "P1", "P2", "P3"), key = "n_tails") %>%
+  extract(data.table(n_tails = rbinom(1e5, size = 3, prob = 0.5))) %>%
+  # modify rbinom(...) above to match the bootstrap distribution
+  extract(, table(mle) %>% prop.table())
+```
+
+```{r p1p2p3-bootci-solution}
+rbinom(1e5, size = 3, prob = 2/3)
+```
+
+What confidence intervals can we form from the bootstrap distribution?
+
+In certain circumstances, we can go further than just summarizing regions of the (estimated) sampling distribution of our estimator, and assert *coverage probabilities*: identifying a random region that has a certain chance of containing the true model.
+
+For this to work, we'll need the true model to be one of our candidates!
+
+### One parameter
+
+Suppose we know (somehow!) that we're sampling from a normal distribution with unknown mean but unit variance. Recall that in this case $\bar{X}$ (our MLE for the mean!) has a normal distribution with the same unknown mean ($\mu$, say), and variance $1/n$.
+
+Consider the following:
+
+$$P(-1.96 < \sqrt{n}(\bar{X} - \mu) < 1.96) = 0.95$$
+
+We can shuffle this to make it describe a random region:
+
+$$P(\bar{X} - 1.96 / \sqrt{n} < \mu < \bar{X} + 1.96 / \sqrt{n}) = 0.95$$
+The interval $(\bar{X} - 1.96 \sqrt{n}, \bar{X} + 1.96 \sqrt{n})$ is random because $\bar{X}$ is, and will contain the true $\mu$ with probability 95%. This is called a 95% confidence interval.
+
+Modify the call to `ggplot()` to see that these random regions do contain the true parameter ($\mu = 0$) about 19 times out of 20.
+
+```{r normal-ci, exercise = TRUE}
+nSims <- 20
+n <- 50
+data.table(sim = 1:nSims,
+           xbar = replicate(nSims, rnorm(n, mean = 0, sd = 1) %>% mean())) %>%
+  extract(, lower := xbar - 1.96 / sqrt(n)) %>%
+  extract(, upper := xbar + 1.96 / sqrt(n)) -> CIs
+
+str(CIs)
+
+ggplot(CIs, aes(x = xbar, y = sim)) + # what other aesthetic mappings do we need?
+  geom_point() + geom_errorbarh() +
+  geom_vline(xintercept = 0, linetype = "dashed")
+```
+
+```{r normal-ci-solution}
+aes(x = xbar, y = sim, xmin = lower, xmax = upper)
+```
+
+### More parameters
+
+Okay, let's admit to ourselves we don't know $\sigma$, the population standard deviation.
+
+Now the MLEs for $\mu$ and $\sigma$ have a (joint) sampling distribution; run the following code to see it. The MLE for $\sigma$ is the "divide by $n$" version, whereas `sd` uses the ("divide by $n - 1$") modification. Can you fix the code?
+
+```{r joint-sampling, exercise = TRUE}
+fr <- data.table(x = replicate(1e3, rnorm(30) %>% list())) %>%
+  extract(, mle_mu := sapply(x, mean)) %>%
+  extract(, mle_sigma := sapply(x, sd)) # this isn't *quite* the MLE
+
+fr %$% MASS::kde2d(mle_mu, mle_sigma) %$%
+  plot_ly(x = ~x, y = ~y, z = ~z, type = "surface")
+```
+
+One advantage here is that each parameter estimate has a marginal (sampling) distribution. This differs from the profiling done for likelihood intervals.
+
+## Distribution of MLE
+
+### Asymptotic
+
+Probably the main reason confidence intervals are so widely used is because of the *asymptotic* (that is, large sample) sampling distribution of the maximum likelihood estimators. Under fairly general conditions, we have
+$$\sqrt{n}(\hat{\theta} - \theta) \to \mathrm{N}(0, I^{-1})$$
+where $I$ measures the precision of the estimates. The matrix $I^{-1}$ has along its diagonals the variances (that is, the squared standard errors) of the estimates.
+
+This leads to a famous and very general way to compute confidence intervals for maximum likelihood estimates:
+
+$$\mathrm{estimate} \pm 2 \times \mathrm{standard\ error}$$
+
+### Small sample
+
+As we've already seen, this doesn't work so well if sample size is small: the normal approximation isn't good. Sometimes (as with the sample mean), we can use a $t$-distribution to give us a confidence interval for $\mu$.
+
+Remember that $T = \sqrt{n} (\bar{X} - \mu) / S$ has a $t$-distribution with $n - 1$ degrees of freedom, and no dependence on $\sigma$? We can do a similar 'pivot' and create a confidence interval.
+
+Compare the width of two such intervals for different sample sizes using the following code. Change the degrees of freedom. What happens?
+
+```{r normal-t, exercise = TRUE}
+mult_t <- qt(0.975, df = 5) # 2.57
+mult_z <- qnorm(0.975) # 1.96
+
+estimate <- pi # why not?
+standard_error <- exp(1) # it's one of those days
+
+data.table(estimate, type = c("z", "t"),
+           lower = estimate - c(mult_z, mult_t) * standard_error,
+           upper = estimate + c(mult_z, mult_t) * standard_error) %>%
+  ggplot(aes(x = estimate, xmin = lower, xmax = upper, y = type)) +
+    geom_point() + geom_errorbarh()
+```
+
+Lots of other approaches are possible, including (as we've seen) the bootstrap, and higher order (roughly, better) approximations to the likelihood.
+
+There is also a close connection with hypothesis testing:
+
+> Whether or not a 95% confidence interval includes the null value (often, 0) can be used an informal test (at the 5% level) of whether that parameter differs significantly from the null value.
