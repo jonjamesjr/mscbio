@@ -4,18 +4,24 @@ Two learnr tutorials to accompany the Cardiff MSc Bioinformatics.
 
 ## Installation
 
-You can install the released version of mscbio from [CRAN](https://CRAN.R-project.org) with:
+You can install from github with:
 
 ``` r
-install.packages("mscbio")
+install_github("jonjamesjr/mscbio")
 ```
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
+Then run the tutorials with 
+
 
 ``` r
-library(mscbio)
-## basic example code
+learnr::run_tutorial("sampling", "mscbio")
+```
+
+and
+
+``` r
+learnr::run_tutorial("estimation", "mscbio")
 ```
 
