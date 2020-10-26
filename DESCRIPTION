@@ -1,0 +1,16 @@
+Package: mscbio
+Title: Tutorial Package for Cardiff Bioinformatics MSc 
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Daniel",
+           family = "Farewell",
+           role = c("aut", "cre"),
+           email = "farewelld@cardiff.ac.uk")
+Description: Provides tutorials for MSc teaching. 
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+Suggests: 
+    learnr
