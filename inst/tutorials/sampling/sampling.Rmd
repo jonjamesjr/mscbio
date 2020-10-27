@@ -97,7 +97,7 @@ m <- 100
 
 voting_intentions <- data.table(
   individual = rep(1:n, each = m),
-  date = as.Date("2018-11-18") + 1:m,
+  date = as.Date("2020-10-31") + 1:m,
   plan = c("A", "B")[1 + cumsum(rbinom(n * m, size = 1, prob = 0.01)) %% 2]
 )
 ```
@@ -126,9 +126,9 @@ Let's try to reconstruct where the polls from the famous 1948 presidential elect
 popn_props <- poll_props <- intend_truman <-
   array(dim = c(3, 2), dimnames = list(demographic = 1:3, has_phone = 0:1))
 
-popn_props[] <- outer(c(0.5, 0.3, 0.2), c(0.6, 0.4))
-intend_truman[] <- c(0.4, 0.5, 0.6, 0.2, 0.4, 0.5)
-vote_truman <- intend_truman + 0.1
+popn_props[] <- cbind(c(5, 25, 20), c(20, 25, 5)) / 100
+intend_truman[] <- cbind(c(30, 50, 70), c(30, 50, 70)) / 100
+vote_truman <- intend_truman + 0.05
 ```
 
 Run this code block to show population proportions in different groups.
@@ -137,7 +137,7 @@ Run this code block to show population proportions in different groups.
 popn_props
 ```
 
-And this shows the probability of voting for Harry Truman within each of these groups, at some point shortly before the election actually took place.
+And this shows the probability of voting for Harry Truman within each of these groups, at some point shortly before the election actually took place. You'll notice that voting intentions don't vary with phone ownership, but do vary by demographic.
 
 ```{r intentions, exercise = TRUE, exercise.setup = "truman"}
 intend_truman
@@ -146,14 +146,14 @@ intend_truman
 The Chicago Daily Tribune might have been expecting a dip in support for Truman, but actually he got a late boost. Modify the next chunk of code to reflect this.
 
 ```{r vote, exercise = TRUE, exercise.setup = "truman"}
-vote_truman <- intend_truman - 0.2 # modify this line to give Truman a late 10% boost
+vote_truman <- intend_truman - 0.05 # modify this line to give Truman a late 5% boost
 
 sum(popn_props * intend_truman) # hypothetical early vote
 sum(popn_props * vote_truman) # actual vote
 ```
 
 ```{r vote-solution}
-vote_truman <- intend_truman + 0.1
+vote_truman <- intend_truman + 0.05
 ```
 
 The Tribune also didn't poll people according to the population proportions in `popn_props`. Experiment with the expected results from a telephone poll, or if they only polled people in 'demographic 1'.
@@ -168,8 +168,8 @@ sum(popn_props * vote_truman) # actual vote
 ```
 
 ```{r phone-solution}
-poll_props[] <- c(0, 0, 0, 1/3, 1/3, 1/3) # representative poll of phone users
-poll_props[] <- c(0.6, 0, 0, 0.4, 0, 0) # representative poll of demographic 1
+poll_props[] <- c(0, 0, 0, 0.4, 0.5, 0.1) # representative poll of phone users
+poll_props[] <- c(0.8, 0, 0, 0.2, 0, 0) # representative poll of demographic 1
 ```
 
 ## Sampling variation
