@@ -163,7 +163,7 @@ poll_props[] <- c(1, 0, 0, 0, 0, 0) # modify this line to investigate polling st
 
 poll_props
 
-sum(poll_props * vote_truman) # polling results
+sum(poll_props * intend_truman) # polling results
 sum(popn_props * vote_truman) # actual vote
 ```
 
@@ -195,8 +195,9 @@ rnorm(1, mean = 35, sd = 6)
 Suppose we had a sample of 25 such individuals: we could then visualize this variation with a histogram. Re-run the code a few times and notice that there is also considerable variation from one *sample* to another.
 
 ```{r distribution, exercise = TRUE}
-rnorm(25, mean = 35, sd = 6) %>% hist()
-# does the same thing as hist(rnorm(25, mean = 35, sd = 6))
+rnorm(25, mean = 35, sd = 6) %>%
+  hist(main = NULL, xlim = c(0, 70), ylim = c(0, 12))
+  # does the same thing as hist(rnorm(25, mean = 35, sd = 6), ...)
 ```
 
 Let's pop a few samples on the same picture, and identify the mean of each.
@@ -275,6 +276,8 @@ ggplot(samples, aes(x = albumin)) + geom_density() +
 
 Roughly, the *law of large numbers* says that we can expect the distribution of sample means to concentrate around the population mean as sample size increases.
 
+TODO: include the analogy from Andy Field's book, that we're seeing more of the "picture" with increasing sample size. Get a picture in R and "sample" it with different sample sizes.
+
 ## Standard error
 
 If $X_{1}, \ldots, X_{n}$ are *independent* and *identically distributed* with variance $\mathrm{Var}(X_{i}) = \sigma^{2}$, then $$\mathrm{Var}(\overline{X}) = \mathrm{Var}\left(\frac{1}{n} \sum_{i = 1}^{n} X_{i}\right) = \frac{1}{n^{2}} \mathrm{Var}\left(\sum_{i = 1}^{n} X_{i}\right) = \frac{1}{n^{2}} \sum_{i = 1}^{n} \mathrm{Var}(X_{i}) = \frac{1}{n^{2}} \sum_{i = 1}^{n} \sigma^{2} = \frac{1}{n^{2}} n \sigma^{2} = \frac{1}{n} \sigma^{2}.$$
@@ -318,7 +321,9 @@ The "error" terminology can be helpful in reminding us that we are trying to est
 
 Almost invariably we have only one set of data:
 ```{r single_sample, echo = FALSE}
+set.seed(0)
 our_sample <- rnorm(25, mean = 35, sd = 6)
+set.seed(NULL)
 ```
 
 ```{r show_sample, exercise = TRUE, exercise.setup = "single_sample"}
@@ -354,7 +359,7 @@ ggplot(samples, aes(x = sample, y = albumin)) + geom_point(size = 0.5) +
     size = 4, colour = "darkred", shape = 18)
 ```
 
-Discuss with the person next to you similarities and differences between these last two pictures.
+Discuss similarities and differences between these last two pictures.
 
 Use the following code to work out the standard error of the mean using only the original sample:
 
@@ -377,7 +382,7 @@ sd(replicate(..., mean(sample(...))))
 sd(replicate(1e3, mean(sample(our_sample, replace = TRUE))))
 ```
 
-Remarkably, we have arrived at an estimate of the precision of our estimated mean, *using only the single sample we have available to us*.
+Remarkably, we have arrived at an estimate of the precision of our estimated mean, *using only the single sample we have available to us*. But why are these numbers different each time we run the code?
 
 ## Central Limit Theorem
 
@@ -420,7 +425,7 @@ setups %>% extract(, {
 ggplot(sample_means, aes(x = sample_mean)) + geom_density() +
   facet_grid(n ~ distribution, scales = "free")
 ```
-Discuss with a different person the meaning of these pictures. Do any of them alarm you?
+Discuss the meaning of these pictures. Do any of them alarm you?
 
 Your turn: create a weird distribution and explore how sample means behave. Explore sample sizes other than 10.
 
@@ -432,70 +437,6 @@ my_weird_sample <- function(n) {
 my_weird_sample(n = 1e5) %>% density() %>% plot()
 # plots the density of your weird distribution
 
-replicate(1e5, my_weird_sample(n = 10)) %>% apply(2, mean) %>% density %>% plot()
+replicate(1e5, my_weird_sample(n = 10)) %>% apply(2, mean) %>% density() %>% plot()
 # plots the density of the sample means of your weird distibution
-```
-
-
-## Topic 1
-
-### Exercise 
-
-*Here's a simple exercise with an empty code chunk provided for entering the answer.*
-
-Write the R code required to add two plus two:
-
-```{r two-plus-two, exercise=TRUE}
-
-```
-
-### Exercise with Code
-
-*Here's an exercise with some prepopulated code as well as `exercise.lines = 5` to provide a bit more initial room to work.*
-
-Now write a function that adds any two numbers and then call it:
-
-```{r add-function, exercise=TRUE, exercise.lines = 5}
-add <- function() {
-  
-}
-```
-
-## Topic 2
-
-### Exercise with Hint
-
-*Here's an exercise where the chunk is pre-evaulated via the `exercise.eval` option (so the user can see the default output we'd like them to customize). We also add a "hint" to the correct solution via the chunk immediate below labeled `print-limit-hint`.*
-
-Modify the following code to limit the number of rows printed to 5:
-
-```{r print-limit, exercise=TRUE, exercise.eval=TRUE}
-mtcars
-```
-
-```{r print-limit-hint}
-head(mtcars)
-```
-
-### Quiz
-
-*You can include any number of single or multiple choice questions as a quiz. Use the `question` function to define a question and the `quiz` function for grouping multiple questions together.*
-
-Some questions to verify that you understand the purposes of various base and recommended R packages:
-
-```{r quiz}
-quiz(
-  question("Which package contains functions for installing other R packages?",
-    answer("base"),
-    answer("tools"),
-    answer("utils", correct = TRUE),
-    answer("codetools")
-  ),
-  question("Which of the R packages listed below are used to create plots?",
-    answer("lattice", correct = TRUE),
-    answer("tools"),
-    answer("stats"),
-    answer("grid", correct = TRUE)
-  )
-)
 ```
