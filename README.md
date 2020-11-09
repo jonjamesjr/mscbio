@@ -4,7 +4,8 @@ Two learnr tutorials to accompany the Cardiff MSc Bioinformatics.
 
 ## Installation
 
-You can install from github with:
+You'll need the `devtools` package installed. Then you can install from github
+with:
 
 ``` r
 install_github("jonjamesjr/mscbio")
@@ -12,7 +13,7 @@ install_github("jonjamesjr/mscbio")
 
 ## Example
 
-Then run the tutorials with 
+Make sure you have the `learnr` package installed. Then run the tutorials with:
 
 
 ``` r
