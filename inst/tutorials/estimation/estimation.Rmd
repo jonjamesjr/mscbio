@@ -17,9 +17,9 @@ learnr::initialize_tutorial()
 
 ### Abraham Wald
 
-![](http://www.mrmeyer.com/blog/wp-content/uploads/071126_1.jpg)
+![](images/planes.jpg)
 
-[https://pollev.com/farewell](https://pollev.com/farewell)
+TODO: replace PollEverywhere with Mentimeter here.
 
 ### Central Limit Theorem
 
@@ -43,7 +43,7 @@ P3 <- function() {
 }
 ```
 
-*Maximum likelihood estimation* involves identifying the model that makes the data we observed most likely to have occurred. We saw last week that `P2` was twice as likely to produce this data as `P1`, and that `P3` could never produce this data. In this case, `P2` is our maximum likelihood estimate, or MLE.
+*Maximum likelihood estimation* involves identifying the model that makes the data we observed most likely to have occurred. We saw last time that `P2` was twice as likely to produce this data as `P1`, and that `P3` could never produce this data. In this case, `P2` is our maximum likelihood estimate, or MLE.
 
 > A *point estimate* is just a single model ("point") --- or a single instance of model parameter(s) --- that we have identified as somehow relevant to a scientific question of interest ("estimate").
 
@@ -105,14 +105,14 @@ hist(x)
 
 loglik <- function(pars, x) dnorm(x, mean = pars[1], sd = pars[2], log = TRUE) %>% sum()
 
-optim(0:1, loglik, x = x, control = list(fnscale = -1))
+optim(c(mean = 0, sd = 1), loglik, x = x, control = list(fnscale = -1))
 ```
 
 If there's a tie for 1st place, then the MLE is not unique.
 
 It's really pretty important that we're choosing among a restricted class of models. Ask yourself what an MLE would be if our class of models to choose from included all possible data-generating mechanisms? If it helps to think of an example, ask yourself what the MLE(s) might be to explain why your tutor failed to turn up to teach today?
 
-[https://pollev.com/farewell](https://pollev.com/farewell)
+TODO: Mentimeter explanation of why I didn't turn up!
 
 ## Likelihood intervals
 
@@ -122,18 +122,28 @@ To supplement point estimation, we may wish to also identify a subset of models 
 
 One of the simplest ways to do this is using the likelihood again: pick a cutoff relative to the maximum likelihood estimate, and exclude any model whose probability of giving rise to the observed data is smaller than this cutoff.
 
-[https://pollev.com/farewell](https://pollev.com/farewell)
+TODO: Mentimeter to ask people what cutoff they would choose
 
 ### One parameter
 
-For our `P1`, `P2`, `P3` example, which models would be in a 1/8 likelihood interval (likelihood set, really) for each possible value of the data? Replace the `...` to find out. Who's in? Who's out?
+Here are the likelihoods for each possible number of tails associated with each model:
 
-```{r like-interval, exercise = TRUE}
+```{r likelihoods, echo = FALSE}
 data.table(n_tails = 0:3) %>%
   extract(, P1 := choose(3, n_tails) * (1/3)^n_tails * (2/3)^(3 - n_tails)) %>%
   extract(, P2 := choose(3, n_tails) * (2/3)^n_tails * (1/3)^(3 - n_tails)) %>%
   extract(, P3 := choose(3, n_tails) * (3/3)^n_tails * (0/3)^(3 - n_tails)) -> likelihoods
+```
 
+```{r show-likelihoods, exercise = TRUE, exercise.setup = "likelihoods"}
+print(likelihoods)
+```
+
+The columns sum to 1, but when thinking in terms of likelihoods we are actually more interested in the rows: which model made the data we actually observed most likely, or at least relatively likely?
+
+For our `P1`, `P2`, `P3` example, which models would be in a 1/8 likelihood interval (likelihood set, really) for each possible value of the data? Replace the `...` to find out. Who's in? Who's out?
+
+```{r like-interval, exercise = TRUE, exercise.setup = "likelihoods"}
 likelihoods[, MLE_prob := pmax(P1, P2, P3)]
 likelihoods[, P1_in := ... >= 1/8] # is P1 in?
 likelihoods[, P2_in := ... >= 1/8] # is P2 in?
@@ -197,7 +207,7 @@ Run the following code to explore the shape of the (log-)likelihood function as 
 set.seed(0)
 ```
 
-```{r mean-var-surface, exercise = TRUE}
+```{r mean-var-surface-plot, exercise = TRUE, exercise.setup = "mean-var-surface-setup"}
 x <- rnorm(30, mean = 19, sd = 7)
 
 expand.grid(mu = seq(10, 30, by = 1), sigma = seq(5, 10, by = 1)) %>% data.table() %>%
@@ -210,6 +220,21 @@ likelihoods %>%
 ```
 
 Now modify the code so that it explores a denser grid of points (`seq(..., by = 0.1)`, for example) but only plots the points within (say) 4 log-likelihood units of the maximum. Can you colour the points according to whether they are within (say) 2 log-likelihood units? Roughly, this consitutes a 1/8 likelihood region.
+
+```{r mean-var-surface, exercise = TRUE}
+x <- rnorm(30, mean = 19, sd = 7)
+
+expand.grid(mu = seq(10, 30, by = 1), sigma = seq(5, 10, by = 1)) %>% data.table() %>% # change by = 1 to something smaller
+  extract(, loglik := dnorm(x, mean = mu, sd = sigma, log = TRUE) %>% sum(),
+          by = list(mu, sigma)) -> likelihoods
+
+likelihoods[, within4 := ...] # modify so TRUE iff max(loglik) - loglik < 4
+likelihoods[, within2 := ...] # modify so TRUE iff max(loglik) - loglik < 2
+
+likelihoods[...] %>% # change ... so that only points within 4 are included
+  plot_ly(x = ~mu, y = ~sigma, z = ~loglik, color = ~loglik, # change color = ~ loglik to indicate which are within 2
+          type = "scatter3d", mode = "markers")
+```
 
 ```{r mean-var-surface-solution}
 expand.grid(mu = seq(10, 30, by = 0.1), sigma = seq(5, 10, by = 0.1)) %>%
@@ -235,11 +260,11 @@ An alternative to this three-dimensional viewpoint is to try to concentrate the 
 
 - Alternatively, we can find some function of the data that does not directly depend on the nuisance parameters. This is called a *marginal likelihood*.
 
-In this case, we can directly examine the marginal distribution of $$T = \frac{\bar{X}}{S / \sqrt{n}}$$ and uncover a $t$-distribution that depends only on $\mu$ (and the sample size).
+In this case, we can directly examine the marginal distribution of $$T = \frac{\bar{X} - \mu}{S / \sqrt{n}}$$ and uncover a $t$-distribution that depends only on $\mu$ (and the sample size).
 
 ## The $t$-distribution
 
-![](https://foxfiregeneva.com/file/guinness-beer-will-soon-be-vegan.jpeg){width="50%"}
+![](images/guinness.jpg){width="50%"}
 
 > "The usual method of determining the probability that the mean of the population lies within a given distance of the mean of the sample, is to assume a normal distribution about the mean of the sample with a standard deviation equal to $s/\sqrt{n}$, where $s$ is the standard devaition of the sample, and to use the tables of the probability integral.
 >
@@ -255,9 +280,9 @@ qqnorm(z)
 qqline(z)
 ```
 
-![](https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/William_Gosset_plaque_in_Guinness_storehouse_tour%2C_Ireland.jpg/440px-William_Gosset_plaque_in_Guinness_storehouse_tour%2C_Ireland.jpg){width="50%"}
+![](images/gosset.jpg){width="50%"}
 
-Gosset showed that $$T = \frac{\bar{X}}{S / \sqrt{n}}$$ has a particular (non-Normal) distribution that does not depend on $\sigma$. We can use this to form a marginal likelihood interval for $\mu$:
+Gosset showed that $$T = \frac{\bar{X} - \mu}{S / \sqrt{n}}$$ has a particular (non-Normal) distribution that does not depend on $\sigma$. We can use this to form a marginal likelihood interval for $\mu$:
 
 ```{r marginal-likelihood-setup}
 set.seed(0)
@@ -278,6 +303,8 @@ The $t$-distribution crops up *a lot* (as we shall see).
 
 ## Bayesian credible intervals
 
+![](images/maybe_bayes.gif)
+
 ### Bayesian estimation
 
 Bayesian statisticians use data to update their *prior* beliefs about the relative likelihood of the set of candidate models (say `P1`, `P2`, and `P3` again).
@@ -293,25 +320,42 @@ We can now ask which model has the biggest posterior! This is again *point estim
 Assign a prior to each of `P1`, `P2`, and `P3`, and work out their posterior probabilities given the data 'tails, heads, tails'.
 
 ```{r bayes, exercise = TRUE}
+prior <- c(P1 = ..., P2 = ..., P3 = ...) # choose prior probs that add to one!
+theta <- c(P1 = 1/3, P2 = 2/3, P3 = 3/3)
+probs <- choose(3, 2) * theta^2 * (1 - theta)^1
+posterior <- probs * prior / ... # "normalise" this expression so the post. probs add to one, too
+
+posterior
 ```
 
-This procedure coincides with maximizing the liklihood if $P(\mathrm{model}) \propto 1$: a *uniform prior*. But this isn't always possible, or advisable.
+```{r bayes-solution}
+prior <- c(P1 = 0.1, P2 = 0.2, P3 = 0.7) # for example
+posterior <- probs * prior / sum(probs * prior) # notice the post. prob of P3!
+```
 
-It is impossible to specify ignorance! Uniform distribution is not such a statement -- rather, it is the strong statement that all models are equally likely.
+This procedure coincides with maximizing the likelihood if $P(\mathrm{model}) \propto 1$: a *uniform prior*. But this isn't always possible, or advisable.
+
+NB: it is impossible to specify ignorance! Uniform distribution is not such a statement -- rather, it is the strong statement that all models are equally likely.
 
 ### One parameter
 
-Choice of model now has a posterior distribution. We can form a credible interval by grabbing whatever percentage of this we want.
+Because the choice of model now has a probability distribution, we can form a so-called credible interval (or set) by grabbing whatever percentage of this we want.
+
+For example, we might believe *a priori* that the model is `P2` or `P3` with probability 0.9, but *a posteriori* have updated the probability of this set to 0.8. The set {`P2`, `P3`} would be a 80% posterior credible interval. But note that, in this case, all of that 80% is in fact concentrated on `P2`!
 
 ### More parameters
 
-Bayesians can marginalise over other parameters to focus on aspects of inference most relevant. Note that
+Bayesians can marginalise over other parameters to focus on aspects of inference that are most relevant to the problem at hand. Note that
 
-- t distributions arise again, as marginal posterior distribution
+- we *can* talk about the probability that a model is 'true' (better: 'best')
+- t-distributions arise again, as marginal posterior distributions
 - there is some ambiguity here: we can choose more than one (say 95%) credible interval
 - Bayesians often choose the interval of highest posterior density (roughly, the shortest interval)
+- once again, the interval only contains data-generating mechanisms that
+  * (a) actually exist
+  * (b) can actually give rise to the data
 
-Despite the apparent attraction of Bayesian inference, this is still not universally accepted, basically because of the important and not-always-obvious role of the prior.
+> Despite the many attractions of Bayesian inference, this is still not universally accepted, basically because of the important and not-always-obvious role of the prior.
 
 ## Confidence intervals
 

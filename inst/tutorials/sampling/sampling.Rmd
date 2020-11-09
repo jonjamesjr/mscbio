@@ -440,3 +440,5 @@ my_weird_sample(n = 1e5) %>% density() %>% plot()
 replicate(1e5, my_weird_sample(n = 10)) %>% apply(2, mean) %>% density() %>% plot()
 # plots the density of the sample means of your weird distibution
 ```
+
+Homework: explore the sampling distribution of the standard deviation.
