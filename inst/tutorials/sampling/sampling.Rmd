@@ -276,8 +276,6 @@ ggplot(samples, aes(x = albumin)) + geom_density() +
 
 Roughly, the *law of large numbers* says that we can expect the distribution of sample means to concentrate around the population mean as sample size increases.
 
-TODO: include the analogy from Andy Field's book, that we're seeing more of the "picture" with increasing sample size. Get a picture in R and "sample" it with different sample sizes.
-
 ## Standard error
 
 If $X_{1}, \ldots, X_{n}$ are *independent* and *identically distributed* with variance $\mathrm{Var}(X_{i}) = \sigma^{2}$, then $$\mathrm{Var}(\overline{X}) = \mathrm{Var}\left(\frac{1}{n} \sum_{i = 1}^{n} X_{i}\right) = \frac{1}{n^{2}} \mathrm{Var}\left(\sum_{i = 1}^{n} X_{i}\right) = \frac{1}{n^{2}} \sum_{i = 1}^{n} \mathrm{Var}(X_{i}) = \frac{1}{n^{2}} \sum_{i = 1}^{n} \sigma^{2} = \frac{1}{n^{2}} n \sigma^{2} = \frac{1}{n} \sigma^{2}.$$

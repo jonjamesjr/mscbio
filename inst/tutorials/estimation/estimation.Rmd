@@ -19,8 +19,6 @@ learnr::initialize_tutorial()
 
 ![](images/planes.jpg)
 
-TODO: replace PollEverywhere with Mentimeter here.
-
 ### Central Limit Theorem
 
 What did you discover about the sampling distribution of the SD?
@@ -112,8 +110,6 @@ If there's a tie for 1st place, then the MLE is not unique.
 
 It's really pretty important that we're choosing among a restricted class of models. Ask yourself what an MLE would be if our class of models to choose from included all possible data-generating mechanisms? If it helps to think of an example, ask yourself what the MLE(s) might be to explain why your tutor failed to turn up to teach today?
 
-TODO: Mentimeter explanation of why I didn't turn up!
-
 ## Likelihood intervals
 
 Point estimation  picks out a single model from a set of candidate models, for instance  --- in the case of maximum likelihood estimation --- the model that makes the data most likely.
@@ -121,8 +117,6 @@ Point estimation  picks out a single model from a set of candidate models, for i
 To supplement point estimation, we may wish to also identify a subset of models (data generating mechanisms / theories / parameters) that are broadly consistent with the data.
 
 One of the simplest ways to do this is using the likelihood again: pick a cutoff relative to the maximum likelihood estimate, and exclude any model whose probability of giving rise to the observed data is smaller than this cutoff.
-
-TODO: Mentimeter to ask people what cutoff they would choose
 
 ### One parameter
 
@@ -190,6 +184,7 @@ The arbitrariness of where to end the set or interval will be a recurring theme 
 - there is no further ambiguity once the cutoff is set
 - it doesn't matter how we parametrize the distribution (e.g. in terms of odds)
 - the (extreme) asymmetry of some of the intervals
+- no asymptotics are required: these are finite sample properties
 - this example provides a point of reference: 1/8 is the chance of three tails in a row on a fair coin
 - the interval only contains data-generating mechanisms that
   * (a) actually exist
@@ -282,6 +277,8 @@ qqline(z)
 
 ![](images/gosset.jpg){width="50%"}
 
+There are actually lots of examples where this still happens today, and in fact what is sometimes called "researcher degrees of freedom" (or that Andrew Gelman calls the "garden of forking paths") is a really big problem for science more generally. Variable selection is just one example where we tend to ignore the fact that we have used the data to decide what variables to include in our model. What kind of problems might this lead to?
+
 Gosset showed that $$T = \frac{\bar{X} - \mu}{S / \sqrt{n}}$$ has a particular (non-Normal) distribution that does not depend on $\sigma$. We can use this to form a marginal likelihood interval for $\mu$:
 
 ```{r marginal-likelihood-setup}
@@ -335,20 +332,20 @@ posterior <- probs * prior / sum(probs * prior) # notice the post. prob of P3!
 
 This procedure coincides with maximizing the likelihood if $P(\mathrm{model}) \propto 1$: a *uniform prior*. But this isn't always possible, or advisable.
 
-NB: it is impossible to specify ignorance! Uniform distribution is not such a statement -- rather, it is the strong statement that all models are equally likely.
+NB: it is impossible to specify ignorance! The uniform distribution is *not* such a statement -- rather, it is the strong statement that all models are equally likely.
 
 ### One parameter
 
 Because the choice of model now has a probability distribution, we can form a so-called credible interval (or set) by grabbing whatever percentage of this we want.
 
-For example, we might believe *a priori* that the model is `P2` or `P3` with probability 0.9, but *a posteriori* have updated the probability of this set to 0.8. The set {`P2`, `P3`} would be a 80% posterior credible interval. But note that, in this case, all of that 80% is in fact concentrated on `P2`!
+For example, we might believe *a priori* that the model is `P2` or `P3` with probability 0.9, but *a posteriori* have updated the probability of this set to 0.8. The set {`P2`, `P3`} would be a 80% posterior credible interval. But note that, in this case, all of that 80% is in fact concentrated on `P2`! (Why did this happen?)
 
 ### More parameters
 
 Bayesians can marginalise over other parameters to focus on aspects of inference that are most relevant to the problem at hand. Note that
 
 - we *can* talk about the probability that a model is 'true' (better: 'best')
-- t-distributions arise again, as marginal posterior distributions
+- $t$-distributions arise again, as marginal posterior distributions
 - there is some ambiguity here: we can choose more than one (say 95%) credible interval
 - Bayesians often choose the interval of highest posterior density (roughly, the shortest interval)
 - once again, the interval only contains data-generating mechanisms that
@@ -359,9 +356,32 @@ Bayesians can marginalise over other parameters to focus on aspects of inference
 
 ## Confidence intervals
 
-We can also use the (estimated) sampling distribution of our estimators to select a subset of models broadly consistent with the observed data.
+There are several ways of creating and defining confidence intervals: they are neither a single concept nor a simple concept. In general terms, confidence intervals (or confidence sets) consist of a subset of models *broadly consistent with the observed data*.
 
-> Although this is easily the most problematic of the three to interpret, it is also what is most usually done.
+### Inverted significance tests
+
+I suggest you think about confidence intervals as being 'inverted' significance tests. Remember that a significance test of a model $P$ is some procedure with the property that,
+
+$$P(\mbox{we reject $P$}) = 0.05$$
+
+(say), always remembering that there's nothing magical about 5%. Explain to someone else what this apparently simple statement means.
+
+If we have such a significance test for each model $P \in {\cal P}$, and form the set \(\hat{\cal P} = \{P: \mbox{$P$ not rejected}\}\), notice that for all models $P \in {\cal P}$
+
+$$P(\mbox{$\hat{\cal P}$ contains $P$}) = P(\mbox{$P$ not rejected}) = 1 - P(\mbox{we reject $P$}) = 1 - 0.05 = 0.95.$$
+
+The set \(\hat{\cal P}\) would then be called a 95% confidence interval, because if $P$ is the true data-generating model, then \(\hat{\cal P}\) will contain $P$ with 95% probability (and this is true whatever $P$ happens to be.)
+
+If you find that a bit hard to parse:
+
+- you're not alone. Stick with the "broadly consistent with the data" interpretation and you'll not go far wrong
+- remember that it's the set \(\hat{\cal P}\) that's random, not $P$ (we are not ~~in Kansas~~ being Bayesian any more)
+
+> Compared to likelihood intervals and credible intervals, confidence intervals are easily the most problematic of all to interpret. They are also what are most usually done. Go figure.
+
+### Distribution of the MLE
+
+Here's a slightly different way to form confidence intervals (with similar properties).
 
 Let's suppose that, in fact, the true probability of tails is 0.5. (This isn't one of our three candidate models `P1`, `P2`, and `P3` --- but this doesn't matter for these purposes.)
 
@@ -377,7 +397,7 @@ A confidence set (usually, an interval) is just a collection of these models tog
 
 Obviously, all three models together form a 100% confidence set. This illustrates one of the drawbacks of this terminology: we might be seen to be claiming to be "100% confident" the true model is one of these three, when it fact it isn't.
 
-In real life, we don't have access to the true data generating mechanism, so instead we can make do with (for example) the bootstrap version. Modify the code below to find out the bootstrap distribution of the MLE if the observed data were 'tails, heads, tails'.
+In real life, we don't have access to the true data generating mechanism, so instead we can make do with (for example) the bootstrap version. Modify the code below to find out the bootstrap distribution of the MLE if the observed data were 'tails, heads, tails'. To do this, we need to make sure we are simulating data from a binomial distribution with probability 2/3 of tails (to match the observed data).
 
 ```{r p1p2p3-bootci, exercise = TRUE}
 data.table(n_tails = 0:3, mle = c("P1", "P1", "P2", "P3"), key = "n_tails") %>%
@@ -392,11 +412,9 @@ rbinom(1e5, size = 3, prob = 2/3)
 
 What confidence intervals can we form from the bootstrap distribution?
 
-In certain circumstances, we can go further than just summarizing regions of the (estimated) sampling distribution of our estimator, and assert *coverage probabilities*: identifying a random region that has a certain chance of containing the true model.
+In certain circumstances, we can make a link with the inverted-significance-test flavour of confidence intervals, and assert *coverage probabilities*: identifying a random region that has a certain chance of containing the true model, whatever that may be.
 
-For this to work, we'll need the true model to be one of our candidates!
-
-### One parameter
+### One continuous parameter
 
 Suppose we know (somehow!) that we're sampling from a normal distribution with unknown mean but unit variance. Recall that in this case $\bar{X}$ (our MLE for the mean!) has a normal distribution with the same unknown mean ($\mu$, say), and variance $1/n$.
 
@@ -407,7 +425,13 @@ $$P(-1.96 < \sqrt{n}(\bar{X} - \mu) < 1.96) = 0.95$$
 We can shuffle this to make it describe a random region:
 
 $$P(\bar{X} - 1.96 / \sqrt{n} < \mu < \bar{X} + 1.96 / \sqrt{n}) = 0.95$$
-The interval $(\bar{X} - 1.96 \sqrt{n}, \bar{X} + 1.96 \sqrt{n})$ is random because $\bar{X}$ is, and will contain the true $\mu$ with probability 95%. This is called a 95% confidence interval.
+The interval $(\bar{X} - 1.96 \sqrt{n}, \bar{X} + 1.96 \sqrt{n})$ is random because $\bar{X}$ is, and will contain the true $\mu$ with probability 95%. This is also called a 95% confidence interval.
+
+Notice:
+
+- it started by looking at the sampling distribution of the MLE
+- it talks about a random collection of models (in this case those with $|\bar{X} - \mu|/\sqrt{n} < 1.96$)
+- it is asserting a coverage probability
 
 Modify the call to `ggplot()` to see that these random regions do contain the true parameter ($\mu = 0$) about 19 times out of 20.
 
@@ -483,6 +507,6 @@ data.table(estimate, type = c("z", "t"),
 
 Lots of other approaches are possible, including (as we've seen) the bootstrap, and higher order (roughly, better) approximations to the likelihood.
 
-There is also a close connection with hypothesis testing:
+We've come full circle, because there is again a close connection with hypothesis testing:
 
 > Whether or not a 95% confidence interval includes the null value (often, 0) can be used an informal test (at the 5% level) of whether that parameter differs significantly from the null value.
