@@ -457,4 +457,4 @@ replicate(1e5, my_weird_sample(n = 10)) %>% apply(2, mean) %>% density() %>% plo
 # plots the density of the sample means of your weird distibution
 ```
 
-Homework: explore the sampling distribution of the standard deviation.
+Homework: explore the sampling distribution of the variance, the standard deviation and the (natural) logarithm of the standard deviation.

@@ -21,7 +21,7 @@ learnr::initialize_tutorial()
 
 ### Central Limit Theorem
 
-What did you discover about the sampling distribution of the SD?
+What did you discover about the sampling distribution of the variance, the standard deviation, and its logarithm?
 
 ## Maximum likelihood estimation
 
@@ -43,7 +43,7 @@ P3 <- function() {
 
 *Maximum likelihood estimation* involves identifying the model that makes the data we observed most likely to have occurred. We saw last time that `P2` was twice as likely to produce this data as `P1`, and that `P3` could never produce this data. In this case, `P2` is our maximum likelihood estimate, or MLE.
 
-> A *point estimate* is just a single model ("point") --- or a single instance of model parameter(s) --- that we have identified as somehow relevant to a scientific question of interest ("estimate").
+> A *point estimate* is just a single model ("point") --- or a single instance of model parameter(s) --- that we have identified as somehow relevant to a scientific question of interest ("estimate"). You can think of the point estimate as the leader of a gang of models.
 
 What would be the MLE for the other possible datasets we could have had?
 
@@ -60,7 +60,10 @@ What do the models where `P1` wins have in common? How about `P2`? And `P3`?
 
 So we can easily work out the MLE when there are only three models to choose from. But what happens when our set of candidate models is bigger? Infinite? Uncountably infinite, even?
 
-For example: we could have a set $\{P_{\theta}: \theta \in [0, 1]\}$ of candidate models, where $P_{\theta}$ corresponds to three independent tosses of a coin that has probability $\theta$ of landing 'tails'. 
+For example: we could have a set $\{P_{\theta}: \theta \in [0, 1]\}$ of candidate models, where $P_{\theta}$ corresponds to three independent tosses of a coin that has probability $\theta$ of landing 'tails'.
+
+> Think of $\{P_{\theta}: \theta \in [0, 1]\}$ as a box containing all the
+> models we're considering.
 
 We can't try them all, so we need another way to tackle this. We know that the total number of 'tails' $X$ satisfies
 
@@ -93,13 +96,16 @@ In fact, it is not too difficult to show that this likelihood is maximized at ex
 
 In principle, it doesn't matter how many models we're choosing among, or how many parameters are needed to specify these models:
 
-> Maximum likelihood estimation chooses the model that makes the data most likely.
+> Maximum likelihood estimation chooses the model that makes the data most likely. This is one (very widely-used) way to 'elect' a leader from our box of models.
+
+Can you think of any situations in which this might be difficult to do in
+practice, or even a bad idea in principle?
 
 Here's an example of a two-parameter model (mean and standard deviation), where we find out which Normal distribution makes our data most likely to have occurred. Run it a few times to see how the MLEs move around with the data.
 
 ```{r mean-var-optim, exercise = TRUE}
 x <- rnorm(30, mean = 19, sd = 7)
-hist(x)
+hist(x, xlim = c(0, 50), ylim = c(0, 20))
 
 loglik <- function(pars, x) dnorm(x, mean = pars[1], sd = pars[2], log = TRUE) %>% sum()
 
@@ -115,6 +121,9 @@ It's really pretty important that we're choosing among a restricted class of mod
 Point estimation  picks out a single model from a set of candidate models, for instance  --- in the case of maximum likelihood estimation --- the model that makes the data most likely.
 
 To supplement point estimation, we may wish to also identify a subset of models (data generating mechanisms / theories / parameters) that are broadly consistent with the data.
+
+> Think of *the set of models broadly consistent with the data* as an exclusive
+> club: models are only allowed in if they fit the data reasonably well.
 
 One of the simplest ways to do this is using the likelihood again: pick a cutoff relative to the maximum likelihood estimate, and exclude any model whose probability of giving rise to the observed data is smaller than this cutoff.
 
@@ -135,7 +144,7 @@ print(likelihoods)
 
 The columns sum to 1, but when thinking in terms of likelihoods we are actually more interested in the rows: which model made the data we actually observed most likely, or at least relatively likely?
 
-For our `P1`, `P2`, `P3` example, which models would be in a 1/8 likelihood interval (likelihood set, really) for each possible value of the data? Replace the `...` to find out. Who's in? Who's out?
+For our `P1`, `P2`, `P3` example, which models would be in a 1/8 likelihood interval (likelihood set, really) for each possible value of the data? Replace the `...` with an expression that compares the relevant probability (e.g. `P1`) with `MLE_prob` to find out. Who's in? Who's out?
 
 ```{r like-interval, exercise = TRUE, exercise.setup = "likelihoods"}
 likelihoods[, MLE_prob := pmax(P1, P2, P3)]
@@ -152,7 +161,7 @@ likelihoods[, P2_in := P2 / MLE_prob >= 1/8] # is P2 in?
 likelihoods[, P3_in := P3 / MLE_prob >= 1/8] # is P3 in?
 ```
 
-Now let's use that larger (okay, *much* larger) set of candidate models, $\{P_{\theta}: \theta \in [0, 1]\}$. If the data are 'tails, heads, tails' as before, we know the MLE is for $\theta$ is 2/3, but what other models would make it into a 1/8 likelihood interval?
+Now let's use that larger (okay, *much* larger) set of candidate models, $\{P_{\theta}: \theta \in [0, 1]\}$. If the data are 'tails, heads, tails' as before, we know the MLE is for $\theta$ is 2/3, but what other models would be admitted to the (exclusive club) 1/8 likelihood interval?
 
 Add a dashed vertical reference line (`geom_vline()`) to the following plot at $\theta = 2/3$, and a horizontal reference line (`geom_hline()`) where the relative likelihood is 1/8. 
 
@@ -312,7 +321,7 @@ $$P(\mathrm{model} \mid \mathrm{data}) \propto P(\mathrm{data} \mid \mathrm{mode
 
 The left-hand side of this expression is called a *posterior* probability.
 
-We can now ask which model has the biggest posterior! This is again *point estimation*.
+We can now ask which model has the biggest posterior! This is again *point estimation*: choosing a leader from our box of models.
 
 Assign a prior to each of `P1`, `P2`, and `P3`, and work out their posterior probabilities given the data 'tails, heads, tails'.
 
@@ -336,9 +345,67 @@ NB: it is impossible to specify ignorance! The uniform distribution is *not* suc
 
 ### One parameter
 
-Because the choice of model now has a probability distribution, we can form a so-called credible interval (or set) by grabbing whatever percentage of this we want.
+Because the choice of model now has a probability distribution, we can form a so-called credible interval (or set) by grabbing whatever percentage of this we want. This is how Bayesians form their "exclusive club" of well-fitting models.
 
 For example, we might believe *a priori* that the model is `P2` or `P3` with probability 0.9, but *a posteriori* have updated the probability of this set to 0.8. The set {`P2`, `P3`} would be a 80% posterior credible interval. But note that, in this case, all of that 80% is in fact concentrated on `P2`! (Why did this happen?)
+
+### A more complex example
+
+```{r, include=FALSE}
+secret <- pi
+```
+
+Here's an example that's closer to what happens in real life. First imagine we're trying to estimate the mean of some quantity, say the temperature in degrees on Christmas Day.
+
+At least notionally, we should pick our prior *before* seeing the data, so let's do that.
+
+```{r}
+# pick a prior
+prior <- list(mean = 0, sd = 4)
+```
+
+Now here's 10 years worth of data:
+
+```{r}
+# ten years' data with known SD but top-secret mean
+n <- 10
+y <- rnorm(n, mean = secret, sd = 1)
+print(y)
+```
+
+The following codeblock uses so-called *rejection sampling* to sample from the posterior distribution of the secret mean given the temperature data, without having to be able to write it down explicitly. 
+
+> Techniques like rejection sampling (and MCMC) have made Bayesian statistics
+> practicable even when the maths gets complicated or impossible!
+
+Update the call to `ggplot()` to show a comparison of prior and posterior, and
+the call to `quantile()` to extract a 95% credible interval for the mean
+temperature on Christmas Day.
+
+```{r bayes-update, exercise = TRUE}
+# use rejection sampling to approximate the posterior
+bayes_update <- function(nTries = 1e5) {
+  candidates <- rnorm(nTries, mean = prior$mean, sd = prior$sd) # proposal = prior
+  prob_accept <- sapply(candidates, function(candidate) {
+    prod(dnorm(y, mean = candidate, sd = 1)) * (2 * pi)^(n/2) # likelihood (and bound)
+  })
+  accept <- as.logical(rbinom(nTries, size = 1, prob = prob_accept))
+  data.table(mu = c(candidates, candidates[accept]),
+    distn = c(rep("prior", nTries), rep("posterior", sum(accept))))
+}
+
+# replace ... to plot the densities of the mean (mu) coloured by distn
+ggplot(bayes_update(), aes(x = ..., colour = ...)) + geom_density() 
+
+# replace ... to find the central 95% posterior credible interval
+quantile(bayes_update()[distn == "posterior", mu], c(...))
+```
+
+```{r bayes-update-solution}
+ggplot(bayes_update(), aes(x = mu, colour = distn)) + geom_density() 
+
+quantile(bayes_update()[distn == "posterior", mu], c(0.025, 0.975))
+```
 
 ### More parameters
 
@@ -349,14 +416,14 @@ Bayesians can marginalise over other parameters to focus on aspects of inference
 - there is some ambiguity here: we can choose more than one (say 95%) credible interval
 - Bayesians often choose the interval of highest posterior density (roughly, the shortest interval)
 - once again, the interval only contains data-generating mechanisms that
-  * (a) actually exist
-  * (b) can actually give rise to the data
+  (a) actually exist
+  (b) can actually give rise to the data
 
-> Despite the many attractions of Bayesian inference, this is still not universally accepted, basically because of the important and not-always-obvious role of the prior.
+> Despite the many attractions of Bayesian inference, this is still not universally accepted, at least partly because of the important and not-always-obvious role of the prior.
 
 ## Confidence intervals
 
-There are several ways of creating and defining confidence intervals: they are neither a single concept nor a simple concept. In general terms, confidence intervals (or confidence sets) consist of a subset of models *broadly consistent with the observed data*.
+There are several ways of creating and defining confidence intervals: they are neither a single concept nor a simple concept. In general terms, confidence intervals (or confidence sets) again consist of a subset of models *broadly consistent with the observed data*.
 
 ### Inverted significance tests
 
@@ -379,11 +446,24 @@ If you find that a bit hard to parse:
 
 > Compared to likelihood intervals and credible intervals, confidence intervals are easily the most problematic of all to interpret. They are also what are most usually done. Go figure.
 
+### Intuition
+
+I claim that you already have a good intuition for confidence intervals. Imagine my 'box of models' contains these six dice:
+
+![](images/dice.jpg)
+
+Now I pick one (not telling you which!) and throw it three times, getting 2, 3, and 5.
+
+Which dice would you exclude as being too unlikely to generate these data?
+
+> Our job as statisticians is to say as much as we can about the particular die
+> or dice that nature is rolling.
+
 ### Distribution of the MLE
 
 Here's a slightly different way to form confidence intervals (with similar properties).
 
-Let's suppose that, in fact, the true probability of tails is 0.5. (This isn't one of our three candidate models `P1`, `P2`, and `P3` --- but this doesn't matter for these purposes.)
+Back to tossing coins. Let's suppose that, in fact, the true probability of tails is 0.5. (This isn't one of our three candidate models `P1`, `P2`, and `P3` --- but this doesn't matter for these purposes.)
 
 Run the following code. We see that `P1` is the MLE about 50% of the time, `P2` about 40% of the time, and `P3` about 10% of the time.
 
@@ -467,6 +547,10 @@ fr <- data.table(x = replicate(1e3, rnorm(30) %>% list())) %>%
 
 fr %$% MASS::kde2d(mle_mu, mle_sigma) %$%
   plot_ly(x = ~x, y = ~y, z = ~z, type = "surface")
+```
+
+```{r joint-sampling-solution}
+extract(, mle_sigma := sapply(x, sd) * 29 / 30)
 ```
 
 One advantage here is that each parameter estimate has a marginal (sampling) distribution. This differs from the profiling done for likelihood intervals.
