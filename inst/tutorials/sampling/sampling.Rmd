@@ -114,7 +114,13 @@ str(voting_intentions)
 voting_intentions[date == sample(date, 1), table(plan)]
 ```
 
-Can you come up with other examples where our 'sample' is not just a random subset of some population? For starters, have a think about the weather, the stock market, and the clothes you will choose to wear tomorrow.
+Can you come up with other examples where our 'sample' is not just a random subset of some population? For starters, you could think about
+
+- the weather
+- the stock market
+- cell cultures
+- blood samples
+- Covid swabs
 
 ## Sampling
 
@@ -276,6 +282,18 @@ ggplot(samples, aes(x = albumin)) + geom_density() +
 
 Roughly, the *law of large numbers* says that we can expect the distribution of sample means to concentrate around the population mean as sample size increases.
 
+I really like how Andy Field visualizes this idea in his graphic novel (you read that right!) "An adventure in statistics":
+
+![](images/AndyField_SampleSize.jpg){width=75%}
+
+The protaganist Zach concludes (p120): 
+
+> 'So what you're saying is that small samples don't give you a good "view" on the phenomenon in the population, and different small samples are likely to show different things, but with big samples you get a better "view" of the phenomenon that you're trying to study and what you "see" is likely to be similar across these big samples.'
+
+When asked *how large is a large sample*, Milton the cat / professor replies:
+
+> 'That very much depends on the situation, but for now, just focus on the idea that with samples bigger is better. The same cannot be said for dogs.'
+
 ## Standard error
 
 If $X_{1}, \ldots, X_{n}$ are *independent* and *identically distributed* with variance $\mathrm{Var}(X_{i}) = \sigma^{2}$, then $$\mathrm{Var}(\overline{X}) = \mathrm{Var}\left(\frac{1}{n} \sum_{i = 1}^{n} X_{i}\right) = \frac{1}{n^{2}} \mathrm{Var}\left(\sum_{i = 1}^{n} X_{i}\right) = \frac{1}{n^{2}} \sum_{i = 1}^{n} \mathrm{Var}(X_{i}) = \frac{1}{n^{2}} \sum_{i = 1}^{n} \sigma^{2} = \frac{1}{n^{2}} n \sigma^{2} = \frac{1}{n} \sigma^{2}.$$
@@ -329,7 +347,7 @@ sort(our_sample)
 hist(our_sample)
 ```
 
-What's the difference between these two lines?
+What's the difference between these two lines? (Run the code a few times if you need a clue.)
 
 ```{r resample, exercise = TRUE, exercise.setup = "single_sample"}
 sample(our_sample, replace = FALSE) %>% sort()
