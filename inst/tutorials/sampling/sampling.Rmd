@@ -328,7 +328,7 @@ When asked *how large is a large sample*, Milton the cat / professor replies:
 > 'That very much depends on the situation, but for now, just focus on the idea that with samples bigger is better. The same cannot be said for dogs.'
 
 ```{r hidden_dragon}
-bookworm <- readImage("images/Conversation_With_Smaug.png", resize = NULL, rotate = NULL)
+bookworm <- readImage("images/Conversation_with_Smaug.png", resize = NULL, rotate = NULL)
 masked <- bookworm 
 ```
 
