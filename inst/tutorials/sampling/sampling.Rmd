@@ -14,6 +14,8 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ## Statistical inference
 
+### Menti: Would I lie to you? & I find statistics...
+
 > Arguably, the whole job of statistics is *inductive reasoning*: the derivation
 > of general principles from specific observations.  
 
@@ -137,6 +139,8 @@ Can you come up with other examples where our 'sample' is not just a random subs
 
 ## Sampling
 
+### Menti: Ask me anything
+
 ![](images/DeweyDefeatsTruman.jpg){width="50%"}
 
 Let's try to reconstruct where the polls from the famous 1948 presidential election went wrong.
@@ -254,6 +258,8 @@ question("The means of the samples... (select ALL that apply)",
 
 ## Sampling distribution of the mean
 
+### Menti: What's your idea of a BIG number?
+
 What happens if we change the sample size? Here's some data generated and plotted in exactly the same way, except that now we have sample sizes of 5, 10, 15, 20 and 25.
 
 ```{r samplesize-setup}
@@ -297,11 +303,11 @@ ggplot(samples, aes(x = albumin)) + geom_density() +
 
 Roughly, the *law of large numbers* says that we can expect the distribution of sample means to concentrate around the population mean as sample size increases.
 
-I really like how Andy Field visualizes this idea in his [https://www.amazon.co.uk/Adventure-Statistics-Reality-Enigma-dp-1529797144/dp/1529797144/ref=dp_ob_title_bk](graphic novel) (you read that right!) "An adventure in statistics":
+I really like how Andy Field visualizes this idea in his [graphic novel](https://www.amazon.co.uk/Adventure-Statistics-Reality-Enigma-dp-1529797144/dp/1529797144/ref=dp_ob_title_bk) (you read that right!) "An adventure in statistics":
 
 ![](images/AndyField_SampleSize.jpg){width=75%}
 
-The protaganist Zach concludes (p120): 
+The protaganist Zach concludes (p120, at least in the first edition): 
 
 > 'So what you're saying is that small samples don't give you a good "view" on the phenomenon in the population, and different small samples are likely to show different things, but with big samples you get a better "view" of the phenomenon that you're trying to study and what you "see" is likely to be similar across these big samples.'
 
@@ -344,7 +350,11 @@ question(" At what rate does the standard deviation of the sample mean decrease?
 
 The "error" terminology can be helpful in reminding us that we are trying to estimate something.
 
+### Menti: Ask me anything
+
 ## The bootstrap
+
+### Menti: My favourite urban legend is...
 
 > "The attempt of the mind to analyze itself [is] an effort analogous to one who would lift himself by his own bootstraps." (1860)
 
@@ -458,6 +468,8 @@ ggplot(sample_means, aes(x = sample_mean)) + geom_density() +
 ```
 Discuss the meaning of these pictures. Do any of them alarm you?
 
+### Menti: My favourite distribution is...
+
 Your turn: create a weird distribution and explore how sample means behave. Explore sample sizes other than 10.
 
 ```{r weird, exercise = TRUE}
@@ -471,5 +483,7 @@ my_weird_sample(n = 1e5) %>% density() %>% plot()
 replicate(1e5, my_weird_sample(n = 10)) %>% apply(2, mean) %>% density() %>% plot()
 # plots the density of the sample means of your weird distibution
 ```
+
+### Menti: Ask me anything
 
 Homework: explore the sampling distribution of the variance, the standard deviation and the (natural) logarithm of the standard deviation.
