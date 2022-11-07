@@ -328,12 +328,18 @@ When asked *how large is a large sample*, Milton the cat / professor replies:
 > 'That very much depends on the situation, but for now, just focus on the idea that with samples bigger is better. The same cannot be said for dogs.'
 
 ```{r hidden_dragon}
-bookworm <- readImage("images/Conversation_with_Smaug.png", resize = NULL, rotate = NULL)
+bookworm <- readImage("images/Conversation_with_Smaug.png",
+                      resize = NULL, rotate = NULL)
 masked <- bookworm 
 ```
 
+Try changing the number of hidden rows and columns in the following exercise to see for yourself how variance decreases with sample size:
+
+![](images/Conversation_with_Smaug.png)
+
 ```{r crouching_burglar, exercise = TRUE, exercise.setup = "hidden_dragon"}
-n_hidden <- 150  # change this to different values
+n_hidden <- 100  # change this to different values
+masked <- bookworm
 masked[sample(1:308, n_hidden), , ] <- 1
 masked[, sample(1:240, n_hidden), ] <- 1
 plotImageArray(masked)
