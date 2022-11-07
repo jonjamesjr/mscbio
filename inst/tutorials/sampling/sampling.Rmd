@@ -114,6 +114,19 @@ str(voting_intentions)
 voting_intentions[date == sample(date, 1), table(plan)]
 ```
 
+### What *is* statistics? What is it *for*?
+
+![](images/Telescope_Microscope.jpg){width="50%"}
+
+> Just as a telescope allows us to discern things too distant to be seen with the
+> naked eye, and a microscope allows us to discern things too small to be seen
+> with the naked eye, so *statistics allows us to discern things too complex to be
+> seen with the naked eye*. 
+>
+> ---David Hand
+
+So, rather than think about statistics describing populations, think instead of the subject as describing how *some aspect of the world works*, together with its associated complexity. 
+
 Can you come up with other examples where our 'sample' is not just a random subset of some population? For starters, you could think about
 
 - the weather
