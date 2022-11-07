@@ -156,7 +156,7 @@ Run this code block to show population proportions in different groups.
 popn_props
 ```
 
-And this shows the probability of voting for Harry Truman within each of these groups, at some point shortly before the election actually took place. You'll notice that voting intentions don't vary with phone ownership, but do vary by demographic.
+And this next code block shows the probability of voting for Harry Truman within each of these groups (`intend_truman`), at some point shortly before the election actually took place. You'll notice that voting intentions don't vary with phone ownership, but do vary by demographic.
 
 ```{r intentions, exercise = TRUE, exercise.setup = "truman"}
 intend_truman
@@ -201,7 +201,9 @@ However, this is *deeply* unfair.
 
 > Sometimes, we add things up and divide by $n - 1$.
 
-It's not important at the moment why we might divide by $n - 1$. What *is* important is that we do this when we're thinking about *variation*: the point is that statisticians are indeed interested in means but also---perhaps *especially*---in variances.
+(This quote comes from my PhD supervisor, Robin Henderson, in response to a joking (but not) observation from an applied mathematician.)
+
+It's not important at the moment why we might divide by $n - 1$. What *is* important is that we do this when we're thinking about *variation*: the point is that statisticians are indeed interested in means, but also---perhaps *especially*---in variances.
 
 Let's suppose that serum albumin values measured in patients with primary biliary cirrhosis (PBC) can be assumed to have a normal distribution with a mean of about 35 g/l and a standard deviation of about 6 g/l.
 
@@ -295,7 +297,7 @@ ggplot(samples, aes(x = albumin)) + geom_density() +
 
 Roughly, the *law of large numbers* says that we can expect the distribution of sample means to concentrate around the population mean as sample size increases.
 
-I really like how Andy Field visualizes this idea in his graphic novel (you read that right!) "An adventure in statistics":
+I really like how Andy Field visualizes this idea in his [https://www.amazon.co.uk/Adventure-Statistics-Reality-Enigma-dp-1529797144/dp/1529797144/ref=dp_ob_title_bk](graphic novel) (you read that right!) "An adventure in statistics":
 
 ![](images/AndyField_SampleSize.jpg){width=75%}
 
