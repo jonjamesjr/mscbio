@@ -8,7 +8,7 @@ You'll need the `devtools` package installed. Then you can install from github
 with:
 
 ``` r
-install_github("jonjamesjr/mscbio")
+devtools::install_github("jonjamesjr/mscbio")
 ```
 
 ## Example
