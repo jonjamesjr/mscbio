@@ -382,7 +382,14 @@ Update the call to `ggplot()` to show a comparison of prior and posterior, and
 the call to `quantile()` to extract a 95% credible interval for the mean
 temperature on Christmas Day.
 
-```{r bayes-update, exercise = TRUE}
+```{r bayes-update-setup}
+secret <- pi
+prior <- list(mean = 0, sd = 4)
+n <- 10
+y <- rnorm(n, mean = secret, sd = 1)
+```
+
+```{r bayes-update, exercise = TRUE, exercise.setup = "bayes-update-setup"}
 # use rejection sampling to approximate the posterior
 bayes_update <- function(nTries = 1e5) {
   candidates <- rnorm(nTries, mean = prior$mean, sd = prior$sd) # proposal = prior
